@@ -1,3 +1,2 @@
 export FLASK_APP=app.py
-flask run --debugger
-
+flask run --debugger --reload
