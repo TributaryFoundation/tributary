@@ -22,9 +22,9 @@ def parse_args():
 
 def run(port, debug):
     templates = all_files('templates')
-    app.run(port=port, extra_files=templates, debug=debug)
+    app.run(host='0.0.0.0', port=port, extra_files=templates, debug=debug)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    run(host='0.0.0.0', args.port, args.debug)
+    run(args.port, args.debug)
