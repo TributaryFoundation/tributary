@@ -16,14 +16,15 @@ def parse_args():
     ''' parse arguments and return their argparse.Namespace '''
     parser = argparse.ArgumentParser()
     parser.add_argument("--debug", help="set flask to debug mode", default=False, action="store_true")
+    parser.add_argument("--port", help="port to listen on", default=5000, action="store", type=int)
     return parser.parse_args()
 
 
-def run(debug):
+def run(port, debug):
     templates = all_files('templates')
-    app.run(extra_files=templates, debug=debug)
+    app.run(port=port, extra_files=templates, debug=debug)
 
 
 if __name__ == '__main__':
     args = parse_args()
-    run(args.debug)
+    run(args.port, args.debug)
