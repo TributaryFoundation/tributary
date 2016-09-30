@@ -27,4 +27,4 @@ def run(port, debug):
 
 if __name__ == '__main__':
     args = parse_args()
-    run(args.port, args.debug)
+    run(host='0.0.0.0', args.port, args.debug)
