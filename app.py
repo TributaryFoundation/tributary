@@ -12,3 +12,8 @@ def index():
 @app.route('/start')
 def start():
     return render_template('start.html')
+
+
+@app.route('/received')
+def received():
+    return render_template('received.html')
