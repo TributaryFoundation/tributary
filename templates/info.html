@@ -1,0 +1,92 @@
+{% extends 'layout.html' %}
+{% block body %}
+<div class="container">
+  <h1>Setup a donation</h1>
+  <form action="" method="POST" id="payment-form">
+    <h4>Tell us how to reach you</h4>
+    <label>
+      <span>Name</span>
+      <input type="text" name="name" size="40">
+    </label>
+    <label>
+      <span>Email</span>
+      <input type="text" name="email" size=40">
+    </label>
+    <hr />
+    <h4>Tell us how to charge you</h4>
+    <p>Each month we will charge your credit card the amount you indicate below. We use <a href="https://stripe.com">stripe</a> to ensure your information is safe.</p>
+
+    <p class="payment-errors"></p>
+
+    {# credit card info fields #}
+    {# it is important that the credit card info fields DON'T have name attributes set #}
+    {# that keeps their values from being submitted to our server #}
+    <label>
+      <span>Card Number</span>
+      <input type="text" size="38" data-stripe="number">
+    </label>
+    <label class="inline">
+      <span>Expiration (MM/YY)</span>
+      <input type="text" size="2" data-stripe="exp_month">
+      <span> / </span>
+      <input type="text" size="2" data-stripe="exp_year">
+    </label>
+    <label class="inline">
+      <span>CVC</span>
+      <input type="text" size="4" data-stripe="cvc">
+    </label>
+    <input type="hidden" name="stripe_card_token" value=""></input>
+    {# end credit card info fields #}
+
+    <label></label>{# the 2 inline labels above mess up spacing, this is hacky, but fixes that #}
+
+    <label>
+      <span>Total amount to donate each month</span>
+      <input type="radio" name="amount" value="15">$15</input>
+      <input type="radio" name="amount" value="50" checked="checked">$50</input>
+      <input type="radio" name="amount" value="100">$100</input>
+    </label>
+    <label>
+      <input name="tip" type="checkbox" value="true" checked="checked"></input>
+      <span>Add an optional $5 tip to help Tributary</span>
+    </label>
+
+    <hr />
+
+    <h4>Tell us where to send your donation</h4>
+    <p>Someone will read this before we send any money anywhere. You can enter multiple nonprofits if you'd like, we'll split your donation evenly. Please include their website if possible.</p>
+    <label>
+      <div>How to donate</div>
+      <textarea name="textarea" rows="40" cols="100"></textarea>
+    </label>
+    <input type="submit" class="submit button-primary" value="Next">
+  </form>
+</div>
+
+<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
+<script type="text/javascript">
+  Stripe.setPublishableKey('pk_test_Nfg2xt8D5GK7aq8DeBpeFgtc'); {# TODO this needs to come from a setting / env var somehow #}
+</script>
+<script>
+  var form = document.getElementById('payment-form');
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var submitButton = form.querySelector('.submit');
+
+    submitButton.setAttribute("disabled", "disabled");
+
+    Stripe.card.createToken(form, function(status, response){
+      if(response.error){
+        form.querySelector('.payment-errors').textContent = response.error.message;
+        submitButton.removeAttribute("disabled");
+      } else {
+        var token = response.id;
+        var token_field = document.getElementsByName('stripe_card_token')[0];
+        token_field.setAttribute("value", token);
+        form.submit();
+      }
+    });
+  });
+</script>
+{% endblock %}

@@ -196,7 +196,7 @@ select:focus {
 label,
 legend {
     display: block;
-    margin-bottom: .5rem;
+    margin-bottom: 1rem;
     font-weight: 600;
 }
 
@@ -208,12 +208,17 @@ input[type="checkbox"],
 input[type="radio"] {
     display: inline;
 }
-
-label > .label-body {
-    display: inline-block;
-    margin-left: .5rem;
-    font-weight: normal;
+label.inline {
+  display: inline;
 }
+
+.payment-errors {
+    color: #CC0000;
+    font-weight: bold;
+}
+
+
+
 
 /* Misc */
 hr {
