@@ -21,8 +21,8 @@ def parse_args():
 
 
 def run(port, debug):
-    templates = all_files('templates')
-    app.run(host='0.0.0.0', port=port, extra_files=templates, debug=debug)
+    extra_files = all_files('templates') + all_files('static')
+    app.run(host='0.0.0.0', port=port, extra_files=extra_files, debug=debug)
 
 
 if __name__ == '__main__':

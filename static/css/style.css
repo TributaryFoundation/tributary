@@ -1,0 +1,33 @@
+body{
+    font-size: 2em;
+}
+
+.center{
+    text-align: center;
+}
+
+.hero {
+    padding: 4rem;
+}
+
+.hero .button{
+    display: inline-block;
+    font-size: 3rem;
+    padding: 1rem 4rem;
+    height: 6rem;
+    text-transform: none;
+    font-weight: normal;
+}
+
+.hero h1{
+    margin-bottom: 4rem;
+    font-weight: bold;
+}
+
+.hero h2{
+    margin-bottom: 3rem;
+}
+
+section h3{
+    text-align: center;
+}
