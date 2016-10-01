@@ -3,9 +3,8 @@
   <head>
     <title>{% block title %}Tributary Foundation{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" type="text/css" href="http://getskeleton.com/dist/css/skeleton.css">
   </head>
-  <body>
+  <body class="{% block bodyclass %}{% endblock %}">
     <div class="container">
       <header class="row">
         <strong>Tributary Foundation</strong>
