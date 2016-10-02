@@ -21,9 +21,10 @@ def info(request):
                 tip = 500 # in cents
             else:
                 tip = 0
-            models.Donation.objects.create(
+            models.Donation.objects.create_with_stripe_token(
+                stripe_token=form.cleaned_data['stripe_card_token'],
+                name=form.cleaned_data['name'],
                 email_address=form.cleaned_data['email'],
-                donor_name=form.cleaned_data['name'],
                 monthly_amount=form.cleaned_data['amount'],
                 tip=tip,
                 instructions=form.cleaned_data['instructions'],
@@ -44,3 +45,4 @@ def received(request):
 
 def confirmed(request):
     return shortcuts.render(request, 'donations/confirmed.html', {})
+
