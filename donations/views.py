@@ -1,4 +1,5 @@
 from django import shortcuts
+from django.conf import settings
 
 from . import forms
 from . import models
@@ -30,7 +31,10 @@ def info(request):
             return shortcuts.redirect('received')
     else:
         form = forms.DonationForm()
-    context = {'form': form}
+    context = {
+        'form': form,
+        'stripe_publishable_key': settings.STRIPE['publishable_key']
+    }
     return shortcuts.render(request, 'donations/info.html', context)
 
 
