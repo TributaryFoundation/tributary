@@ -40,6 +40,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'donations',
+    # Third party:
+    'anymail',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -104,3 +106,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
+
+# Email
+ANYMAIL = {
+    'MAILGUN_API_KEY': os.environ.get('MAILGUN_API_KEY'),
+    'MAILGUN_SENDER_DOMAIN': 'tributary.foundation',
+}
+DEFAULT_FROM_EMAIL = 'hello@tributary.foundation'
