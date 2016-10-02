@@ -1,0 +1,5 @@
+pythonpath = 'tributary'
+logfile = '-'
+errorlog = '-'
+accesslog = '-'
+loglevel = 'debug'
