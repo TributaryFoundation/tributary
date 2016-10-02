@@ -27,16 +27,15 @@ RAYGUN4PY_CONFIG = {
         'MAILGUN_SMTP_PASSWORD',
         'RAYGUN_APIKEY',
         'SECRET_KEY',
+        'EMAIL_TOKEN_SALT',
         'STRIPE_SECRET_KEY',
     ]
 }
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
-
 ALLOWED_HOSTS = []
 
 SECRET_KEY = os.environ["SECRET_KEY"]
+EMAIL_TOKEN_SALT = os.environ['EMAIL_TOKEN_SALT']
 
 # Application definition
 
