@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 
@@ -6,6 +8,7 @@ class Donation(models.Model):
     on behalf of one of our donors.
 
     '''
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email_address = models.EmailField(help_text="Email address of the donor who made this donation.")
     monthly_amount = models.PositiveSmallIntegerField(help_text="Amount to donate each month in whole dollars.")
     instructions = models.TextField(help_text="The unstructured instructions describing where the donation should be sent.")
