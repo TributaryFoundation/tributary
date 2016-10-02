@@ -17,6 +17,11 @@ import dj_database_url
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Logging and exception tracking
+
+RAYGUN4PY_CONFIG = {
+    'api_key': os.environ.get("RAYGUN_APIKEY"),
+}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
@@ -46,7 +51,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'raygun4py.middleware.django.Provider',
 )
+
 
 ROOT_URLCONF = 'tributary.urls'
 
