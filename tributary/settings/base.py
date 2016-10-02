@@ -21,6 +21,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 
 RAYGUN4PY_CONFIG = {
     'api_key': os.environ.get("RAYGUN_APIKEY"),
+    'filtered_keys': [
+        'DATABASE_URL',
+        'MAILGUN_API_KEY',
+        'MAILGUN_SMTP_PASSWORD',
+        'RAYGUN_APIKEY',
+        'SECRET_KEY',
+        'STRIPE_SECRET_KEY',
+    ]
 }
 
 # Quick-start development settings - unsuitable for production
