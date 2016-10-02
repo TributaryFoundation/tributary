@@ -8,11 +8,30 @@ class Donation(models.Model):
     on behalf of one of our donors.
 
     '''
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email_address = models.EmailField(help_text="Email address of the donor who made this donation.")
-    monthly_amount = models.PositiveSmallIntegerField(help_text="Amount to donate each month in whole dollars.")
-    instructions = models.TextField(help_text="The unstructured instructions describing where the donation should be sent.")
-    donor_name = models.CharField(help_text="When making a donation, do it on behalf of this name.", max_length=1000)
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False,
+    )
+
+    email_address = models.EmailField(
+        help_text="Email address of the donor who made this donation.",
+    )
+
+    monthly_amount = models.PositiveSmallIntegerField(
+        help_text="Amount to donate each month in whole dollars, including the tip.",
+    )
+
+    tip = models.PositiveSmallIntegerField(
+        help_text="The amount in whole dollars to be given to Tributary Foundation out of each monthly charge.",
+    )
+
+    instructions = models.TextField(
+        help_text="The unstructured instructions describing where the donation should be sent.",
+    )
+
+    donor_name = models.CharField(
+        help_text="When making a donation, do it on behalf of this name.",
+        max_length=1000,
+    )
 
     # TODO: stripe customer ID:
     # stripe_customer_id = models.CharField()
