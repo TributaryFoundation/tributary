@@ -27,3 +27,7 @@ def info():
 def received():
     return render_template('received.html')
 
+
+@app.route('/confirmed')
+def confirmed():
+    return render_template('confirmed.html')
