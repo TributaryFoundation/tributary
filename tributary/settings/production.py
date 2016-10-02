@@ -1,7 +1,7 @@
+import os
+
 from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost']
-
-SECRET_KEY = 'fixme'
+ALLOWED_HOSTS = ['tributary.foundation', 'www.tributary.foundation']
