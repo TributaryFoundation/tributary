@@ -16,12 +16,13 @@ class Donation(models.Model):
         help_text="Email address of the donor who made this donation.",
     )
 
+    # todo: change these into PositiveIntegerFields
     monthly_amount = models.PositiveSmallIntegerField(
-        help_text="Amount to donate each month in whole dollars, including the tip.",
+        help_text="Amount to donate each month in cents, not including the tip.",
     )
 
     tip = models.PositiveSmallIntegerField(
-        help_text="The amount in whole dollars to be given to Tributary Foundation out of each monthly charge.",
+        help_text="The amount in cents to be given to Tributary Foundation out of each monthly charge.",
     )
 
     instructions = models.TextField(
