@@ -4,7 +4,7 @@
   <section class="row center hero">
     <h1>Donate sustainably</h1>
     <h2>Give monthly to any nonprofits you choose.</h2>
-    <h2><a class="button button-primary hero">Get started</a></h2>
+    <h2><a href="{% url 'info' %}" class="button button-primary hero">Get started</a></h2>
   </section>
   <hr />
   <section class="row">
@@ -12,12 +12,12 @@
     <p>We make monthly contributions for you. Tell us which organizations you want to support and how much to charge your credit card. We use <a href="https://stripe.com">stripe</a> to store your information securely.</p>
     <p>Donations aren't tax-deductible for now, but we are working on that.</p>
     <p>We also ask that you give us an optional $5 tip to help with our operations.</p>
-    <p class="center"><a class="button button-primary">Get started</a></p>
+    <p class="center"><a href="{% url 'info' %}" class="button button-primary">Get started</a></p>
   </section>
   <hr />
   <section class="row">
     <h3>Who we are</h3>
     <p>We are Rodrigo and Spencer. We are building Tributary to scratch our own itch and help the world.</p>
-    <p class="center"><a class="button button-primary">Start!</a></p>
+    <p class="center"><a href="{% url 'info' %}" class="button button-primary">Get started</a></p>
   </section>
 {% endblock %}
