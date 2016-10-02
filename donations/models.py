@@ -35,11 +35,11 @@ class Donation(models.Model):
     )
 
     # todo: change these into PositiveIntegerFields
-    monthly_amount = models.PositiveSmallIntegerField(
+    monthly_amount = models.PositiveIntegerField(
         help_text="Amount to donate each month in cents, not including the tip.",
     )
 
-    tip = models.PositiveSmallIntegerField(
+    tip = models.PositiveIntegerField(
         help_text="The amount in cents to be given to Tributary Foundation out of each monthly charge.",
     )
 
