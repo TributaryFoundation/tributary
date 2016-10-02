@@ -2,52 +2,54 @@
 {% block body %}
 <div class="container">
   <h1>Setup a donation</h1>
-  <form action="" method="POST" id="payment-form">
+
+  <form action="" method="POST" id="donation-form">
+    {% csrf_token %}
+
     <h4>Tell us how to reach you</h4>
+    {{ form.non_field_errors }}
     <label>
+      {{ form.name.errors }}
       <span>Name</span>
-      <input type="text" name="name" size="40">
+      {{ form.name }}
     </label>
     <label>
+      {{ form.email.errors }}
       <span>Email</span>
-      <input type="text" name="email" size=40">
+      {{ form.email }}
     </label>
     <hr />
     <h4>Tell us how to charge you</h4>
     <p>Each month we will charge your credit card the amount you indicate below. We use <a href="https://stripe.com">stripe</a> to ensure your information is safe.</p>
 
-    <p class="payment-errors"></p>
 
     {# credit card info fields #}
     {# it is important that the credit card info fields DON'T have name attributes set #}
     {# that keeps their values from being submitted to our server #}
+    <ul class="errorlist" id="payment-errors"><li></li></ul>
     <label>
       <span>Card Number</span>
-      <input type="text" size="38" data-stripe="number">
+      <input type="text" data-stripe="number">
     </label>
     <label class="inline">
       <span>Expiration (MM/YY)</span>
-      <input type="text" size="2" data-stripe="exp_month">
+      <input type="text" data-stripe="exp_month" class="two-wide">
       <span> / </span>
-      <input type="text" size="2" data-stripe="exp_year">
+      <input type="text" data-stripe="exp_year" class="two-wide">
     </label>
     <label class="inline">
       <span>CVC</span>
-      <input type="text" size="4" data-stripe="cvc">
+      <input type="text" data-stripe="cvc" class="four-wide">
     </label>
-    <input type="hidden" name="stripe_card_token" value=""></input>
+    {{ form.stripe_card_token }}
     {# end credit card info fields #}
 
-    <label></label>{# the 2 inline labels above mess up spacing, this is hacky, but fixes that #}
-
+    <hr />
     <label>
-      <span>Total amount to donate each month</span>
-      <input type="radio" name="amount" value="15">$15</input>
-      <input type="radio" name="amount" value="50" checked="checked">$50</input>
-      <input type="radio" name="amount" value="100">$100</input>
+      <span>Donate {{ form.amount }} each month</span>
     </label>
     <label>
-      <input name="tip" type="checkbox" value="true" checked="checked"></input>
+      {{ form.tip }}
       <span>Add an optional $5 tip to help Tributary</span>
     </label>
 
@@ -57,18 +59,18 @@
     <p>Someone will read this before we send any money anywhere. You can enter multiple nonprofits if you'd like, we'll split your donation evenly. Please include their website if possible.</p>
     <label>
       <div>How to donate</div>
-      <textarea name="textarea" rows="40" cols="60"></textarea>
+      {{ form.instructions }}
     </label>
     <input type="submit" class="submit button-primary" value="Next">
   </form>
-</div>
+
 
 <script type="text/javascript" src="https://js.stripe.com/v2/"></script>
 <script type="text/javascript">
-  Stripe.setPublishableKey('pk_test_Nfg2xt8D5GK7aq8DeBpeFgtc'); {# TODO this needs to come from a setting / env var somehow #}
+  Stripe.setPublishableKey('{{ stripe_publishable_key }}');
 </script>
-<script>
-  var form = document.getElementById('payment-form');
+<script type="text/javascript">
+  var form = document.getElementById('donation-form');
   form.addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -78,7 +80,7 @@
 
     Stripe.card.createToken(form, function(status, response){
       if(response.error){
-        form.querySelector('.payment-errors').textContent = response.error.message;
+        form.querySelector('#payment-errors li').textContent = response.error.message;
         submitButton.removeAttribute("disabled");
       } else {
         var token = response.id;

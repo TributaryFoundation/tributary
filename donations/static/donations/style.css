@@ -160,6 +160,7 @@ select {
     border-radius: 4px;
     box-shadow: none;
     box-sizing: border-box;
+    font-size: 2rem;
 }
 
 /* Removes awkward default styles on some inputs for iOS */
@@ -212,13 +213,15 @@ label.inline {
   display: inline;
 }
 
-.payment-errors {
-    color: #CC0000;
-    font-weight: bold;
+ul.errorlist {
+  margin: 0;
+  padding: 0;
 }
-
-
-
+ul.errorlist li {
+  list-style: none;
+  color: #CC0000;
+  font-weight: bold;
+}
 
 /* Misc */
 hr {
@@ -274,4 +277,23 @@ body.start {
 
 section h3{
     text-align: center;
+}
+
+#donation-form input[type="text"],
+#donation-form input[type="email"] {
+  width: 30rem;
+}
+
+#donation-form input.two-wide {
+  width: 5rem;
+}
+#donation-form input.four-wide {
+  width: 7rem;
+}
+#donation-form input[type="checkbox"] {
+  font-size: x-large;
+}
+#donation-form textarea {
+  width: 50rem;
+  height: 10rem;
 }

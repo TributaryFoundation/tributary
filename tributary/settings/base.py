@@ -121,3 +121,9 @@ ANYMAIL = {
     'MAILGUN_SENDER_DOMAIN': 'tributary.foundation',
 }
 DEFAULT_FROM_EMAIL = 'hello@tributary.foundation'
+
+STRIPE = {
+    'secret_key': os.environ['STRIPE_SECRET_KEY'],
+    'publishable_key': os.environ['STRIPE_PUBLISHABLE_KEY'],
+}
+
