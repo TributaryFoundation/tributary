@@ -1,9 +1,12 @@
+import logging
+
 from django import shortcuts
 from django.conf import settings
+from django.http import Http404
 
 from . import forms
 from . import models
-
+from .verification import validate_token
 
 def index(request):
     return shortcuts.render(request, 'donations/index.html', {})
@@ -44,5 +47,14 @@ def received(request):
 
 
 def confirmed(request):
-    return shortcuts.render(request, 'donations/confirmed.html', {})
+    token = request.GET.get('token', '')
+    email = validate_token(token)
+    if email is None:
+        # The token was invalid or out of date.
+        raise Http404("The provided token isn't valid.")
 
+    n_updated = models.Donation.objects.verify_email(email)
+    if n_updated == 0:
+        raise Http404("The provided token isn't valid.")
+
+    return shortcuts.render(request, 'donations/confirmed.html', {})

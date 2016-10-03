@@ -18,7 +18,11 @@ class DonationManager(models.Manager):
             tip=tip,
             instructions=instructions,
             stripe_customer_id=stripe_customer.id,
+            email_verified=False,
         )
+
+    def verify_email(self, email):
+        return self.get_queryset().filter(email_address=email).update(email_verified=True)
 
 
 

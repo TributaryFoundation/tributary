@@ -1,11 +1,70 @@
 from collections import namedtuple
 import datetime
+from unittest.mock import patch
 
 from freezegun import freeze_time
+import stripe
+from django.test import TestCase, Client
 
-from django.test import TestCase
+from .models import Donation
+from .verification import EmailTokenVerifier, InvalidTokenException, MAX_TOKEN_AGE, generate_token
 
-from .verification import EmailTokenVerifier, InvalidTokenException, MAX_TOKEN_AGE
+
+class EmailVerificationTest(TestCase):
+    @patch('stripe.Customer.create')
+    def setUp(self, stripe_mock):
+        self.email = 'donor@mail.com'
+        self.good_token = generate_token(self.email)
+
+        stripe_mock.return_value = stripe.Customer(id="mock-stripe-id")
+        Donation.objects.create_with_stripe_token('token', '', 'donor@mail.com', 1000, 100, '')
+
+    def test_valid_token(self):
+        resp = Client().get('/confirmed', {'token': self.good_token})
+        self.assertEqual(resp.status_code, 200)
+
+        donation = Donation.objects.get(email_address=self.email)
+        self.assertTrue(donation.email_verified)
+
+    def test_multiple_times(self):
+        resp = Client().get('/confirmed', {'token': self.good_token})
+        self.assertEqual(resp.status_code, 200)
+        resp = Client().get('/confirmed', {'token': self.good_token})
+        self.assertEqual(resp.status_code, 200)
+        resp = Client().get('/confirmed', {'token': self.good_token})
+        self.assertEqual(resp.status_code, 200)
+
+        donation = Donation.objects.get(email_address=self.email)
+        self.assertTrue(donation.email_verified)
+
+    def test_invalid_token(self):
+        bad_token = self.good_token + 'junk'
+
+        resp = Client().get('/confirmed', {'token': bad_token})
+        self.assertEqual(resp.status_code, 404)
+
+        donation = Donation.objects.get(email_address=self.email)
+        self.assertFalse(donation.email_verified)
+
+    def test_expired_token(self):
+        with freeze_time(datetime.datetime.now() - MAX_TOKEN_AGE - datetime.timedelta(days=1)):
+            token = generate_token(self.email)
+
+        resp = Client().get('/confirmed', {'token': token})
+        self.assertEqual(resp.status_code, 404)
+
+        donation = Donation.objects.get(email_address=self.email)
+        self.assertFalse(donation.email_verified)
+
+    def test_no_such_email(self):
+        token = generate_token("missing@email.com")
+
+        resp = Client().get('/confirmed', {'token': token})
+        self.assertEqual(resp.status_code, 404)
+
+    def test_no_token_provided(self):
+        resp = Client().get('/confirmed')
+        self.assertEqual(resp.status_code, 404)
 
 
 class VerificationTokenTest(TestCase):
@@ -15,43 +74,40 @@ class VerificationTokenTest(TestCase):
 
     def test_verify_email_invalid_token(self):
         bad_token = b"c3BlbmNlckB0cmlidXRhcnkuZm91bmRhdGlvbg==:MjAxNi0xMC0wMlQxOToyODo0Ny4wNTE3Mjc=:E9Ys7dUHzgt7dg9_puoJwN_Zr2k="
-        self.assertFalse(self.verifier.verify_email('spencer@tributary.foundation', bad_token))
+        self.assertIsNone(self.verifier.validate_token(bad_token))
 
     def test_verify_email_valid_token(self):
+
         '''Test that verify_email rejects tokens properly if they have the
         wrong email or an old timestamp.
 
         '''
-        Testcase = namedtuple('Testcase', ['email', 'check_time', 'token_email', 'token_timestamp', 'valid'])
+        Testcase = namedtuple('Testcase', ['check_time', 'token_email', 'token_timestamp', 'returned'])
 
         cases = [
             Testcase(
-                email='spencer@tributary.foundation',
                 token_email='spencer@tributary.foundation',
-                check_time=datetime.datetime(2016, 10, 2),
-                token_timestamp=datetime.datetime(2016, 10, 2),
-                valid=True,
+                check_time=datetime.datetime(2016, 10, 30),
+                token_timestamp=datetime.datetime(2016, 10, 30),
+                returned='spencer@tributary.foundation',
             ),
             Testcase(
-                email='spencer@tributary.foundation',
                 token_email='rodrigo@tributary.foundation',
-                check_time=datetime.datetime(2016, 10, 2),
-                token_timestamp=datetime.datetime(2016, 10, 2),
-                valid=False,
+                check_time=datetime.datetime(2016, 10, 30),
+                token_timestamp=datetime.datetime(2016, 10, 30),
+                returned='rodrigo@tributary.foundation',
             ),
             Testcase(
-                email='spencer@tributary.foundation',
                 token_email='spencer@tributary.foundation',
-                check_time=datetime.datetime(2016, 10, 1),
-                token_timestamp=datetime.datetime(2016, 10, 2) - MAX_TOKEN_AGE + datetime.timedelta(seconds=1),
-                valid=True,
+                check_time=datetime.datetime(2016, 10, 30),
+                token_timestamp=datetime.datetime(2016, 10, 30) - MAX_TOKEN_AGE + datetime.timedelta(seconds=1),
+                returned='spencer@tributary.foundation',
             ),
             Testcase(
-                email='spencer@tributary.foundation',
                 token_email='spencer@tributary.foundation',
-                check_time=datetime.datetime(2016, 10, 2),
-                token_timestamp=datetime.datetime(2016, 10, 2) - MAX_TOKEN_AGE - datetime.timedelta(seconds=1),
-                valid=False,
+                check_time=datetime.datetime(2016, 10, 30),
+                token_timestamp=datetime.datetime(2016, 10, 30) - MAX_TOKEN_AGE - datetime.timedelta(seconds=1),
+                returned=None,
             ),
 
         ]
@@ -59,8 +115,8 @@ class VerificationTokenTest(TestCase):
             with freeze_time(case.token_timestamp):
                 token = self.verifier.generate_token(case.token_email)
             with freeze_time(case.check_time):
-                have = self.verifier.verify_email(case.email, token)
-            self.assertEqual(have, case.valid, case)
+                have = self.verifier.validate_token(token)
+            self.assertEqual(have, case.returned, case)
 
     def test_parse_token(self):
         Testcase = namedtuple('Testcase', ['token', 'valid', 'email', 'timestamp'])

@@ -11,6 +11,14 @@ from django.utils.crypto import salted_hmac
 # it to still be considered valid.
 MAX_TOKEN_AGE = datetime.timedelta(days=14)
 
+def validate_token(token):
+    ''' Verifies a token using the default EmailTokenVerifier client. '''
+    return verifier.validate_token(token)
+
+def generate_token(email):
+    ''' Generates a token using the default EmailTokenVerifier client. '''
+    return verifier.generate_token(email)
+
 
 class InvalidTokenException(Exception):
     pass
@@ -31,23 +39,20 @@ class EmailTokenVerifier(object):
         self._key = key
         self._salt = salt
 
-    def verify_email(self, email, token):
-        '''Returns True if the token validates the given email, else returns
-        False.
+    def validate_token(self, token):
+        '''Returns the email encoded in the token if it's a valid token, else
+        returns None.
 
         '''
         try:
             token_email, token_timestamp = self.parse_token(token)
         except InvalidTokenException:
-            return False
-
-        if token_email != email:
-            return False
+            return None
 
         if token_timestamp < (datetime.datetime.now() - MAX_TOKEN_AGE):
-            return False
+            return None
 
-        return True
+        return token_email
 
     def parse_token(self, token):
         '''Checks the signature of a token. If it's invalid, raises an
@@ -128,3 +133,6 @@ def _encode_timestamp(timestamp):
 def _decode_timestamp(encoded_timestamp):
     timestamp_string = base64.urlsafe_b64decode(encoded_timestamp).decode('utf-8')
     return dateutil.parser.parse(timestamp_string)
+
+# The default EmailTokenVerifier client loads its key and salt from settings.
+verifier = EmailTokenVerifier(settings.SECRET_KEY, settings.EMAIL_TOKEN_SALT)
