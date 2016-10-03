@@ -9,10 +9,13 @@ from .verification import EmailTokenVerifier, InvalidTokenException, MAX_TOKEN_A
 
 
 class VerificationTokenTest(TestCase):
-
     def setUp(self):
         key, salt = 'key', 'salt'
         self.verifier = EmailTokenVerifier(key, salt)
+
+    def test_verify_email_invalid_token(self):
+        bad_token = b"c3BlbmNlckB0cmlidXRhcnkuZm91bmRhdGlvbg==:MjAxNi0xMC0wMlQxOToyODo0Ny4wNTE3Mjc=:E9Ys7dUHzgt7dg9_puoJwN_Zr2k="
+        self.assertFalse(self.verifier.verify_email('spencer@tributary.foundation', bad_token))
 
     def test_verify_email_valid_token(self):
         '''Test that verify_email rejects tokens properly if they have the
