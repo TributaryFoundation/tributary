@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 import stripe
 
+
 class DonationManager(models.Manager):
     def create_with_stripe_token(self, stripe_token, name, email_address,
             monthly_amount, tip, instructions):
@@ -35,6 +36,10 @@ class Donation(models.Model):
 
     email_address = models.EmailField(
         help_text="Email address of the donor who made this donation.",
+    )
+
+    email_verified = models.BooleanField(
+        help_text="Whether the email address has been verified by the donor.",
     )
 
     # todo: change these into PositiveIntegerFields

@@ -7,6 +7,11 @@ from django.conf import settings
 from django.utils.crypto import salted_hmac
 
 
+# MAX_TOKEN_AGE is the maximum age of an email verification token for
+# it to still be considered valid.
+MAX_TOKEN_AGE = datetime.timedelta(days=14)
+
+
 class InvalidTokenException(Exception):
     pass
 
@@ -22,11 +27,31 @@ class EmailTokenVerifier(object):
             key = settings.SECRET_KEY
         if salt is None:
             salt = settings.EMAIL_TOKEN_SALT
+
         self._key = key
         self._salt = salt
 
+    def verify_email(self, email, token):
+        '''Returns True if the token validates the given email, else returns
+        False.
+
+        '''
+        try:
+            token_email, token_timestamp = self.parse_token(token)
+        except InvalidTokenException:
+            return False
+
+        if token_email != email:
+            return False
+
+        if token_timestamp < (datetime.datetime.now() - MAX_TOKEN_AGE):
+            return False
+
+        return True
+
     def parse_token(self, token):
-        '''Checks the signature of a token. If it's invalid, raises an
+        '''Checks the signature o
+f a token. If it's invalid, raises an
         InvalidTokenException. Otherwise, returns the email address and
         timestamp encoded in the token.
 
