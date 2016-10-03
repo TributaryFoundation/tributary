@@ -50,8 +50,7 @@ class EmailTokenVerifier(object):
         return True
 
     def parse_token(self, token):
-        '''Checks the signature o
-f a token. If it's invalid, raises an
+        '''Checks the signature of a token. If it's invalid, raises an
         InvalidTokenException. Otherwise, returns the email address and
         timestamp encoded in the token.
 
