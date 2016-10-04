@@ -1,8 +1,12 @@
+import logging
+
 from django import shortcuts
 from django.conf import settings
+from django.http import Http404
 
 from . import forms
 from . import models
+from .verification import validate_token
 
 
 def index(request):
@@ -21,7 +25,7 @@ def info(request):
                 tip = 500 # in cents
             else:
                 tip = 0
-            models.Donation.objects.create_with_stripe_token(
+            donation = models.Donation.objects.create_with_stripe_token(
                 stripe_token=form.cleaned_data['stripe_card_token'],
                 name=form.cleaned_data['name'],
                 email_address=form.cleaned_data['email'],
@@ -29,6 +33,7 @@ def info(request):
                 tip=tip,
                 instructions=form.cleaned_data['instructions'],
             )
+            donation.send_verification_email()
             return shortcuts.redirect('received')
     else:
         form = forms.DonationForm()
@@ -44,5 +49,14 @@ def received(request):
 
 
 def confirmed(request):
-    return shortcuts.render(request, 'donations/confirmed.html', {})
+    token = request.GET.get('token', '')
+    email = validate_token(token)
+    if email is None:
+        # The token was invalid or out of date.
+        raise Http404("The provided token isn't valid.")
 
+    n_updated = models.Donation.objects.verify_email(email)
+    if n_updated == 0:
+        raise Http404("The provided token isn't valid.")
+
+    return shortcuts.render(request, 'donations/confirmed.html', {})
