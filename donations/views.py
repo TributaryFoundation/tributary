@@ -8,6 +8,7 @@ from . import forms
 from . import models
 from .verification import validate_token
 
+
 def index(request):
     return shortcuts.render(request, 'donations/index.html', {})
 
@@ -24,7 +25,7 @@ def info(request):
                 tip = 500 # in cents
             else:
                 tip = 0
-            models.Donation.objects.create_with_stripe_token(
+            donation = models.Donation.objects.create_with_stripe_token(
                 stripe_token=form.cleaned_data['stripe_card_token'],
                 name=form.cleaned_data['name'],
                 email_address=form.cleaned_data['email'],
@@ -32,6 +33,7 @@ def info(request):
                 tip=tip,
                 instructions=form.cleaned_data['instructions'],
             )
+            donation.send_verification_email()
             return shortcuts.redirect('received')
     else:
         form = forms.DonationForm()

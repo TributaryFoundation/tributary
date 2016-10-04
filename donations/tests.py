@@ -1,10 +1,12 @@
 from collections import namedtuple
 import datetime
 from unittest.mock import patch
+import urllib.parse
 
 from freezegun import freeze_time
-import stripe
+from django.core import mail
 from django.test import TestCase, Client
+import stripe
 
 from .models import Donation
 from .verification import EmailTokenVerifier, InvalidTokenException, MAX_TOKEN_AGE, generate_token
@@ -17,7 +19,16 @@ class EmailVerificationTest(TestCase):
         self.good_token = generate_token(self.email)
 
         stripe_mock.return_value = stripe.Customer(id="mock-stripe-id")
-        Donation.objects.create_with_stripe_token('token', '', 'donor@mail.com', 1000, 100, '')
+        self.donation = Donation.objects.create_with_stripe_token('token', '', 'donor@mail.com', 1000, 100, '')
+
+    def test_send_verification_email(self):
+        with freeze_time('2016-01-01'):
+            self.donation.send_verification_email('localhost')
+            token = generate_token(self.email)
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertIn(self.donation.email_address, email.to)
+        self.assertIn(urllib.parse.urlencode({'token':token}), email.body)
 
     def test_valid_token(self):
         resp = Client().get('/confirmed', {'token': self.good_token})
@@ -34,8 +45,8 @@ class EmailVerificationTest(TestCase):
         resp = Client().get('/confirmed', {'token': self.good_token})
         self.assertEqual(resp.status_code, 200)
 
-        donation = Donation.objects.get(email_address=self.email)
-        self.assertTrue(donation.email_verified)
+        self.donation.refresh_from_db()
+        self.assertTrue(self.donation.email_verified)
 
     def test_invalid_token(self):
         bad_token = self.good_token + 'junk'
@@ -43,8 +54,8 @@ class EmailVerificationTest(TestCase):
         resp = Client().get('/confirmed', {'token': bad_token})
         self.assertEqual(resp.status_code, 404)
 
-        donation = Donation.objects.get(email_address=self.email)
-        self.assertFalse(donation.email_verified)
+        self.donation.refresh_from_db()
+        self.assertFalse(self.donation.email_verified)
 
     def test_expired_token(self):
         with freeze_time(datetime.datetime.now() - MAX_TOKEN_AGE - datetime.timedelta(days=1)):
@@ -53,8 +64,8 @@ class EmailVerificationTest(TestCase):
         resp = Client().get('/confirmed', {'token': token})
         self.assertEqual(resp.status_code, 404)
 
-        donation = Donation.objects.get(email_address=self.email)
-        self.assertFalse(donation.email_verified)
+        self.donation.refresh_from_db()
+        self.assertFalse(self.donation.email_verified)
 
     def test_no_such_email(self):
         token = generate_token("missing@email.com")

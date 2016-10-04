@@ -11,6 +11,7 @@ from django.utils.crypto import salted_hmac
 # it to still be considered valid.
 MAX_TOKEN_AGE = datetime.timedelta(days=14)
 
+
 def validate_token(token):
     ''' Verifies a token using the default EmailTokenVerifier client. '''
     return verifier.validate_token(token)
