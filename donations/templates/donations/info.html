@@ -58,6 +58,7 @@
     <h4>Tell us where to send your donation</h4>
     <p>Someone will read this before we send any money anywhere. You can enter multiple nonprofits if you'd like, we'll split your donation evenly. Please include their website if possible.</p>
     <label>
+      {{ form.instructions.errors }}
       <div>How to donate</div>
       {{ form.instructions }}
     </label>
