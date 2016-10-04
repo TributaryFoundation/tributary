@@ -1,3 +1,6 @@
+import structlog
+log = structlog.get_logger('trib')
+
 from django import forms
 
 
@@ -18,3 +21,12 @@ class DonationForm(forms.Form):
     tip = forms.BooleanField(initial=True)
     instructions = forms.CharField(widget=forms.Textarea)
 
+    def clean(self):
+        cleaned = super(DonationForm, self).clean()
+        l = log.bind(
+            name=cleaned.get('name'),
+            email=cleaned.get('email'),
+            amount=cleaned.get('amount'),
+            tip=cleaned.get('tip'),
+        )
+        l.info("donation form cleaned")
