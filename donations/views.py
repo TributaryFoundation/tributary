@@ -1,5 +1,3 @@
-import logging
-
 from django import shortcuts
 from django.conf import settings
 from django.http import Http404
@@ -8,6 +6,8 @@ from . import forms
 from . import models
 from .verification import validate_token
 
+import structlog
+log = structlog.get_logger('trib')
 
 def index(request):
     return shortcuts.render(request, 'donations/index.html', {})
@@ -33,8 +33,11 @@ def info(request):
                 tip=tip,
                 instructions=form.cleaned_data['instructions'],
             )
-            donation.send_verification_email()
+
+            donation.send_verification_email(request.get_host(), request.scheme)
             return shortcuts.redirect('received')
+        else:
+            log.info('invalid donation received', errors=form.errors)
     else:
         form = forms.DonationForm()
     context = {
@@ -50,13 +53,19 @@ def received(request):
 
 def confirmed(request):
     token = request.GET.get('token', '')
+    l = log.bind(token=token)
+
     email = validate_token(token)
     if email is None:
+        l.info('failed email verification')
         # The token was invalid or out of date.
         raise Http404("The provided token isn't valid.")
 
+    l = l.bind(email=email)
+    l.info('parsed token successfully')
     n_updated = models.Donation.objects.verify_email(email)
     if n_updated == 0:
+        l.info('no email found for verification token')
         raise Http404("The provided token isn't valid.")
 
     return shortcuts.render(request, 'donations/confirmed.html', {})
