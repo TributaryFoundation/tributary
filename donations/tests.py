@@ -5,6 +5,7 @@ import urllib.parse
 
 from freezegun import freeze_time
 from django.core import mail
+from django.core.urlresolvers import reverse
 from django.test import TestCase, Client
 import stripe
 
@@ -30,12 +31,12 @@ class DonationInfoTest(TestCase):
 
         stripe_mock.return_value = stripe.Customer(id="mock-stripe-id")
     def test_get_page(self):
-        resp = Client().get('/info')
+        resp = Client().get(reverse('info'))
         self.assertEqual(resp.status_code, 200)
 
     @patch('stripe.Customer.create')
     def test_post(self, stripe_mock):
-        resp = Client().post('/info', {
+        resp = Client().post(reverse('info'), {
             'name': 'Spencer Nelson',
             'email': 'donor@mail.com',
             'amount': '1500',
@@ -66,18 +67,18 @@ class EmailVerificationTest(TestCase):
         self.assertIn(urllib.parse.urlencode({'token':token}), email.body)
 
     def test_valid_token(self):
-        resp = Client().get('/confirmed', {'token': self.good_token})
+        resp = Client().get(reverse('confirmed'), {'token': self.good_token})
         self.assertEqual(resp.status_code, 200)
 
         donation = Donation.objects.get(email_address=self.email)
         self.assertTrue(donation.email_verified)
 
     def test_multiple_times(self):
-        resp = Client().get('/confirmed', {'token': self.good_token})
+        resp = Client().get(reverse('confirmed'), {'token': self.good_token})
         self.assertEqual(resp.status_code, 200)
-        resp = Client().get('/confirmed', {'token': self.good_token})
+        resp = Client().get(reverse('confirmed'), {'token': self.good_token})
         self.assertEqual(resp.status_code, 200)
-        resp = Client().get('/confirmed', {'token': self.good_token})
+        resp = Client().get(reverse('confirmed'), {'token': self.good_token})
         self.assertEqual(resp.status_code, 200)
 
         self.donation.refresh_from_db()
@@ -86,7 +87,7 @@ class EmailVerificationTest(TestCase):
     def test_invalid_token(self):
         bad_token = self.good_token + 'junk'
 
-        resp = Client().get('/confirmed', {'token': bad_token})
+        resp = Client().get(reverse('confirmed'), {'token': bad_token})
         self.assertEqual(resp.status_code, 404)
 
         self.donation.refresh_from_db()
@@ -96,7 +97,7 @@ class EmailVerificationTest(TestCase):
         with freeze_time(datetime.datetime.now() - MAX_TOKEN_AGE - datetime.timedelta(days=1)):
             token = generate_token(self.email)
 
-        resp = Client().get('/confirmed', {'token': token})
+        resp = Client().get(reverse('confirmed'), {'token': token})
         self.assertEqual(resp.status_code, 404)
 
         self.donation.refresh_from_db()
@@ -105,11 +106,11 @@ class EmailVerificationTest(TestCase):
     def test_no_such_email(self):
         token = generate_token("missing@email.com")
 
-        resp = Client().get('/confirmed', {'token': token})
+        resp = Client().get(reverse('confirmed'), {'token': token})
         self.assertEqual(resp.status_code, 404)
 
     def test_no_token_provided(self):
-        resp = Client().get('/confirmed')
+        resp = Client().get(reverse('confirmed'))
         self.assertEqual(resp.status_code, 404)
 
 
