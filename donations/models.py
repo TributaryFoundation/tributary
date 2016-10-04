@@ -1,3 +1,6 @@
+import structlog
+log = structlog.get_logger('trib')
+
 import uuid
 import urllib.parse
 
@@ -13,9 +16,19 @@ from .verification import generate_token
 class DonationManager(models.Manager):
     def create_with_stripe_token(self, stripe_token, name, email_address,
             monthly_amount, tip, instructions):
+
+        l = log.bind(
+            name=name,
+            email=email_address,
+            amount=monthly_amount,
+            tip=tip,
+        )
+
+        l.info('creating stripe customer')
         stripe.api_key = settings.STRIPE['secret_key']
         stripe_customer = stripe.Customer.create(
                 source=stripe_token, email=email_address, description=name)
+        l.info('saving donation in database')
         donation = self.get_queryset().create(
             donor_name=name,
             email_address=email_address,
@@ -25,9 +38,14 @@ class DonationManager(models.Manager):
             stripe_customer_id=stripe_customer.id,
             email_verified=False,
         )
+        l.bind(donation_id=str(donation.id))
+        l.info('donation created')
+        donation.notify_new_donation()
+        l.info('notification email sent for new donation')
         return donation
 
     def verify_email(self, email):
+        log.bind(email=email).info('verifying email')
         return self.get_queryset().filter(email_address=email).update(email_verified=True)
 
 
@@ -77,6 +95,28 @@ class Donation(models.Model):
 
     objects = DonationManager()
 
+    def notify_new_donation(self):
+        '''Send an email notifying founders@ that a new donation has been received'''
+        send_mail(
+            'New donation',
+            '''New donation received!
+
+            Name: {name}
+            Email: {email}
+            Monthly Amount: ${amount:.2f}
+            Tip: ${tip:.2f}
+            Instructions: {instructions}
+            '''.format(
+                name=self.donor_name,
+                email=self.email_address,
+                amount=self.monthly_amount / 100.0,
+                tip=self.tip / 100.0,
+                instructions=self.instructions,
+            ),
+            'founders@tributary.foundation',
+            [ 'founders@tributary.foundation' ],
+        )
+
     def send_verification_email(self, host, scheme='https'):
         url = urllib.parse.urlunsplit((
             scheme,
@@ -86,6 +126,11 @@ class Donation(models.Model):
             ''
         ))
 
+        log.bind(
+            donation_id=str(self.id),
+            email=self.email_address,
+        ).info('sending verification email')
+
         send_mail(
             'Almost done! Please verify your Tributary email',
             'Please click this link to verify your email: {link}'.format(link=url),
@@ -93,7 +138,6 @@ class Donation(models.Model):
             [ self.email_address ],
             fail_silently=False,
         )
-
 
     def __str__(self):
         return '%s <%s>' % (self.donor_name, self.email_address)

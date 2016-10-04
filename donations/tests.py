@@ -11,6 +11,41 @@ import stripe
 from .models import Donation
 from .verification import EmailTokenVerifier, InvalidTokenException, MAX_TOKEN_AGE, generate_token
 
+from django.test.runner import DiscoverRunner
+
+
+# While testing, don't print logs to the console.
+class NoLoggingTestRunner(DiscoverRunner):
+    def run_tests(self, test_labels, extra_tests=None, **kwargs):
+        import logging
+        logging.disable(logging.CRITICAL)
+        return super(NoLoggingTestRunner, self).run_tests(test_labels, extra_tests, **kwargs)
+
+
+class DonationInfoTest(TestCase):
+    @patch('stripe.Customer.create')
+    def setUp(self, stripe_mock):
+        self.email = 'donor@mail.com'
+        self.good_token = generate_token(self.email)
+
+        stripe_mock.return_value = stripe.Customer(id="mock-stripe-id")
+    def test_get_page(self):
+        resp = Client().get('/info')
+        self.assertEqual(resp.status_code, 200)
+
+    @patch('stripe.Customer.create')
+    def test_post(self, stripe_mock):
+        resp = Client().post('/info', {
+            'name': 'Spencer Nelson',
+            'email': 'donor@mail.com',
+            'amount': '1500',
+            'stripe_card_token': 'token',
+            'instructions': 'hi',
+            'tip': '1',
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(len(mail.outbox), 2)
+
 
 class EmailVerificationTest(TestCase):
     @patch('stripe.Customer.create')
@@ -25,8 +60,8 @@ class EmailVerificationTest(TestCase):
         with freeze_time('2016-01-01'):
             self.donation.send_verification_email('localhost')
             token = generate_token(self.email)
-        self.assertEqual(len(mail.outbox), 1)
-        email = mail.outbox[0]
+        self.assertEqual(len(mail.outbox), 2)
+        email = mail.outbox[1]
         self.assertIn(self.donation.email_address, email.to)
         self.assertIn(urllib.parse.urlencode({'token':token}), email.body)
 
