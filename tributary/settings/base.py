@@ -19,6 +19,54 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 
 # Logging and exception tracking
 
+import structlog
+import logging
+import sys
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.processors.KeyValueRenderer(),
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': ('[%(asctime)s] [%(process)d] [%(levelname)s] ' +
+                       '%(message)s'),
+            'datefmt': '%Y-%m-%d %H:%M:%S'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
+    },
+    'loggers': {
+        'trib': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        }
+    }
+}
+
+TEST_RUNNER='donations.tests.NoLoggingTestRunner'
+
 RAYGUN4PY_CONFIG = {
     'api_key': os.environ.get("RAYGUN_APIKEY"),
     'filtered_keys': [
